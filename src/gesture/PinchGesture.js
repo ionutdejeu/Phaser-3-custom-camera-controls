@@ -18,10 +18,15 @@ export class PinchGesture{
         this.pointers = [];
         this.movedState = {};
         this.tracerState = TOUCH0;
+        this.dragThreshold = 0;
+        this.state = IDLE;
         this.boot();//attache events 
         
         this.debugGraphics = this.scene.add.graphics();
         // link events to the main scene events 
+
+        this.stateText = this.scene.add.text(100, 100, '', { font: '16px Courier', fill: '#00ff00' });
+
         this.events = this.scene.events;
         this.drawPointerDebug();
         
@@ -40,6 +45,38 @@ export class PinchGesture{
             this.debugGraphics.fillStyle(0x00ff00, 1);
             this.debugGraphics.fillRect(p.x, p.y, 44, 44);
         });
+        this.stateText.setText([
+            'Pinch Gesture',
+            'state: ' + this.state,
+            'scale: ' + this.scaleFactor,
+            'previousDinstance: ' + this.prevDistanceBetweenTouchPoints
+        ]);
+    }
+
+    transitionTo(newState){
+        
+        switch(this.state){
+            case undefined:
+                // before 
+                this.state = IDLE
+                this.prevDistanceBetweenTouchPoints = 0
+                this.outputScaleFactor = 1 // initial default output value
+                break;
+            case RECOGNIZED: 
+                if(newState !== RECOGNIZED) 
+                {
+                    this.events.emit('pinchend',this);
+                }
+                break;
+        }
+        switch(newState){
+            case IDLE:
+                this.events.emit('pinchend',this);
+                break;
+             
+        }
+
+        this.state = newState;
     }
     onPointerDownHandler(pointer){
         
@@ -124,15 +161,53 @@ export class PinchGesture{
     }
 
     onDrag2Start() {
+        this.scaleFactor = 1;
+        this.prevDistance = this.distanceBetween;
+        //this.state = (this.dragThreshold === 0) ? RECOGNIZED : BEGIN;
+        this.transitionTo((this.dragThreshold === 0) ? RECOGNIZED : BEGIN);
         this.events.emit('drag2start', this);
     }
 
     onDrag2End() {
+        this.transitionTo(IDLE);
         this.events.emit('drag2end', this);
     }
 
     onDrag2() {
-        this.emit('drag2', this);
+        switch (this.state) {
+            case BEGIN:
+                if ((this.pointers[0].getDistance() >= this.dragThreshold) &&
+                    (this.pointers[1].getDistance() >= this.dragThreshold)) {
+                    var curDistance = this.distanceBetween;
+                    this.scaleFactor = curDistance / this.prevDistanceBetweenTouchPoints;
+                    this.prevDistance = curDistance;
+                    this.transitionTo(RECOGNIZED)
+                    //this.state = RECOGNIZED;
+                }
+                break;
+            case RECOGNIZED:
+                var curDistance = this.distanceBetween;
+                this.scaleFactor = curDistance / this.prevDistanceBetweenTouchPoints;
+                this.events.emit('pinch', this);
+                this.prevDistanceBetweenTouchPoints = curDistance;
+                break;
+        }
+        this.events.emit('drag2', this);
+    }
+    get distanceBetween(){
+        if(this.tracerState != TOUCH2){
+            return 0;
+        }
+        var p0 = this.pointers[0],p1 = this.pointers[1];
+        return DistanceBetween(p0.x,p0.y,p1.x,p1.y);
+    }
+    get angleBetween(){
+        if(this.tracerState != TOUCH2){
+            return 0;
+        }
+        var p0 = this.pointers[0],
+            p1 = this.pointers[1];
+        return AngleBetween(p0.x, p0.y, p1.x, p1.y);
     }
 
 }
