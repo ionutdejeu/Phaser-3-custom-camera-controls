@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import logo_png from './assets/logo.png';
 import {FollowScrollingCamera} from './shared/FollowScrollingCamera';
 import { PinchGesture } from "./gesture/PinchGesture";
+import { PinchScrollingCamera } from "./shared/PinchScrollingCamera";
 
 
 var config = {
@@ -63,13 +64,18 @@ function create ()
 
   this.add.text(10, 10, 'Multi touch drag test', { font: '16px Courier', fill: '#000000' });
   this.cameras.remove(this.cameras.main);
-  var camera = new FollowScrollingCamera(this,{
-      x:0,
-      y:0,
-      bottom:800,
-      right:600
-  });
-  this.pinchGesture = new PinchGesture(this,{});
+  // var camera = new FollowScrollingCamera(this,{
+  //     x:0,
+  //     y:0,
+  //     bottom:800,
+  //     right:600
+  // });
+  var camera = new PinchScrollingCamera(this,{
+        x:0,
+        y:0,
+        bottom:800,
+        right:600
+    });
 }
 
 function update ()

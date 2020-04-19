@@ -60,7 +60,7 @@ export class PinchGesture{
                 // before 
                 this.state = IDLE
                 this.prevDistanceBetweenTouchPoints = 0
-                this.outputScaleFactor = 1 // initial default output value
+                this.scaleFactor = 1 // initial default output value
                 break;
             case RECOGNIZED: 
                 if(newState !== RECOGNIZED) 
@@ -162,7 +162,7 @@ export class PinchGesture{
 
     onDrag2Start() {
         this.scaleFactor = 1;
-        this.prevDistance = this.distanceBetween;
+        this.prevDistanceBetweenTouchPoints = this.distanceBetween;
         //this.state = (this.dragThreshold === 0) ? RECOGNIZED : BEGIN;
         this.transitionTo((this.dragThreshold === 0) ? RECOGNIZED : BEGIN);
         this.events.emit('drag2start', this);
@@ -180,7 +180,7 @@ export class PinchGesture{
                     (this.pointers[1].getDistance() >= this.dragThreshold)) {
                     var curDistance = this.distanceBetween;
                     this.scaleFactor = curDistance / this.prevDistanceBetweenTouchPoints;
-                    this.prevDistance = curDistance;
+                    this.prevDistanceBetweenTouchPoints = curDistance;
                     this.transitionTo(RECOGNIZED)
                     //this.state = RECOGNIZED;
                 }
